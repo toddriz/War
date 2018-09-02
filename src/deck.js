@@ -19,7 +19,7 @@ exports.dealCards = (numberOfDecks, cardsPerPlayer) => {
     return _.chunk(allCards, cardsPerPlayer);
 };
 
-exports.getCardStrength = card => {
+const getCardStrength = card => {
     if (!card) {
         return -1;
     } else if (card.slice(0, 2) === '10') {
@@ -28,3 +28,13 @@ exports.getCardStrength = card => {
         return cards.indexOf(card.slice(0, 1));
     }
 };
+
+exports.getCardStrength = getCardStrength;
+
+const getDeckStrength = deck => {
+    return deck.reduce((acc, card) => {
+        return (acc += getCardStrength(card));
+    }, 0);
+};
+
+exports.getDeckStrength = getDeckStrength;

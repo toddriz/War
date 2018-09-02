@@ -1,16 +1,24 @@
 const _ = require('lodash');
+const fs = require('fs');
 const { dealCards } = require('./deck.js');
 const { simulateGame } = require('./war.js');
 
-const printResults = (
-    { winner, battleCount, p1ShuffleCount, p2ShuffleCount, p1Deck, p1Discard, p2Deck, p2Discard },
-    verbose
+const results = [];
+
+const printGameResult = (
+    { winner, battleCount, p1ShuffleCount, p2ShuffleCount, p1Deck, p1Discard, p2Deck, p2Discard, invalidGame },
+    verbose,
+    gameNumber
 ) => {
+    console.log('\n**** Game', gameNumber, '****');
+    if (invalidGame) {
+        console.log('** INVALID GAME **');
+    }
     console.log(winner === 'p1' ? 'Player One Wins!' : 'Player Two Wins!');
     console.log('Battle Count:', battleCount);
-    console.log('Player 1 Shuffle Count:', p1ShuffleCount);
-    console.log('Player 2 Shuffle Count:', p2ShuffleCount);
     if (verbose) {
+        console.log('Player 1 Shuffle Count:', p1ShuffleCount);
+        console.log('Player 2 Shuffle Count:', p2ShuffleCount);
         console.log('Player One Deck:', p1Deck);
         console.log('Player One Discard:', p1Discard);
         console.log('Player Two Deck:', p2Deck);
@@ -18,11 +26,20 @@ const printResults = (
     }
 };
 
-const numberOfDecks = 4;
+const gamesToRun = 100;
+const numberOfDecks = 2;
 const cardsPerPlayer = 52;
 
-const [initialP1Deck, initialP2Deck] = dealCards(numberOfDecks, cardsPerPlayer);
+const runGame = index => {
+    const [initialP1Deck, initialP2Deck] = dealCards(numberOfDecks, cardsPerPlayer);
 
-const results = simulateGame({ initialP1Deck, initialP2Deck, cardsPerPlayer });
+    const result = simulateGame({ initialP1Deck, initialP2Deck, cardsPerPlayer });
 
-printResults(results);
+    results.push(result);
+
+    printGameResult(result, false, index + 1);
+};
+
+_.times(gamesToRun, runGame);
+
+fs.writeFileSync('results.json', JSON.stringify(results));
