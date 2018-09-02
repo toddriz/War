@@ -24,8 +24,6 @@ exports.simulateGame = ({ initialP1Deck, initialP2Deck }) => {
         reShuffleDeck(p2Deck, p2Discard, 'p2');
 
         const cardCountChecksum = p1Deck.length + p1Discard.length + p2Deck.length + p2Discard.length;
-        console.log('totalCards', totalCards);
-        console.log('cardCountChecksum', cardCountChecksum);
         if (cardCountChecksum !== totalCards) {
             console.log('******bad game******');
             break;
