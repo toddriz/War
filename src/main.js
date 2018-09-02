@@ -25,4 +25,4 @@ const [initialP1Deck, initialP2Deck] = dealCards(numberOfDecks, cardsPerPlayer);
 
 const results = simulateGame({ initialP1Deck, initialP2Deck, cardsPerPlayer });
 
-printResults(results, true);
+printResults(results);
