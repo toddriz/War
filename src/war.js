@@ -1,27 +1,20 @@
 const _ = require('lodash');
-const { getDeck, getCardStrength } = require('./deck');
-
-const playerCardCount = 52;
-const deck = getDeck();
-const splitDeck = _.chunk(_.concat(_.shuffle(deck), _.shuffle(deck)), playerCardCount);
-
-const p1Deck = splitDeck[0];
-const p2Deck = splitDeck[1];
-const p1Discard = [];
-const p2Discard = [];
-
+const { getCardStrength } = require('./deck');
+// cooper
+// todd
 let p1ShuffleCount = 0;
 let p2ShuffleCount = 0;
 let battleCount = 0;
 
-const printResults = () => {
-    console.log(p1Deck.length ? 'Player One Wins!' : 'Player Two Wins!');
-    console.log('Battle Count:', battleCount);
-    console.log('Player 1 Shuffle Count:', p1ShuffleCount);
-    console.log('Player 2 Shuffle Count:', p2ShuffleCount);
-};
+let p1Deck;
+let p2Deck;
+const p1Discard = [];
+const p2Discard = [];
 
-const main = () => {
+exports.simulateGame = ({ initialP1Deck, initialP2Deck }) => {
+    const totalCards = initialP1Deck.length + initialP2Deck.length;
+    p1Deck = initialP1Deck;
+    p2Deck = initialP2Deck;
     while (p1Deck.length && p2Deck.length) {
         while (p1Deck.length && p2Deck.length) {
             battle(p1Deck.shift(), p2Deck.shift());
@@ -31,13 +24,24 @@ const main = () => {
         reShuffleDeck(p2Deck, p2Discard, 'p2');
 
         const cardCountChecksum = p1Deck.length + p1Discard.length + p2Deck.length + p2Discard.length;
-        if (cardCountChecksum !== playerCardCount * 2) {
+        console.log('totalCards', totalCards);
+        console.log('cardCountChecksum', cardCountChecksum);
+        if (cardCountChecksum !== totalCards) {
             console.log('******bad game******');
             break;
         }
     }
 
-    printResults();
+    return {
+        winner: p1Deck.length ? 'p1' : 'p2',
+        battleCount,
+        p1ShuffleCount,
+        p2ShuffleCount,
+        p1Deck,
+        p1Discard,
+        p2Deck,
+        p2Discard
+    };
 };
 
 const battle = (p1Card, p2Card, tieBreakerSpoils = []) => {
@@ -93,5 +97,3 @@ const reShuffleDeck = (deck, discard, player) => {
         }
     }
 };
-
-main();

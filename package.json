@@ -2,10 +2,9 @@
     "name": "war",
     "version": "1.0.0",
     "description": "A simulation of the card game war",
-    "main": "war.js",
+    "main": "main.js",
     "scripts": {
-        "start": "node src/war.js",
-        "predict": "node src/predict.js"
+        "start": "node src/main.js"
     },
     "author": "Todd Risenmay",
     "license": "MIT",
