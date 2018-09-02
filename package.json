@@ -1,13 +1,13 @@
 {
     "name": "war",
     "version": "1.0.0",
-    "description": "",
+    "description": "A simulation of the card game war",
     "main": "war.js",
     "scripts": {
         "start": "node src/war.js"
     },
-    "author": "",
-    "license": "ISC",
+    "author": "Todd Risenmay",
+    "license": "MIT",
     "dependencies": {
         "lodash": "^4.17.10"
     }
