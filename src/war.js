@@ -1,51 +1,37 @@
-const { getDeck, getCardRank } = require('./deck');
 const _ = require('lodash');
-const playerDeckSize = 52;
+const { getDeck, getCardStrength } = require('./deck');
+
+const playerCardCount = 52;
 const deck = getDeck();
-const splitDeck = _.chunk(_.concat(_.shuffle(deck), _.shuffle(deck)), playerDeckSize);
-const playerOneDeck = splitDeck[0];
-const playerTwoDeck = splitDeck[1];
-const playerOneDiscard = [];
-const playerTwoDiscard = [];
+const splitDeck = _.chunk(_.concat(_.shuffle(deck), _.shuffle(deck)), playerCardCount);
+
+const p1Deck = splitDeck[0];
+const p2Deck = splitDeck[1];
+const p1Discard = [];
+const p2Discard = [];
+
 let p1ShuffleCount = 0;
 let p2ShuffleCount = 0;
 let battleCount = 0;
 
 const printResults = () => {
-    console.log(playerOneDeck.length ? 'Player One Wins!' : 'Player Two Wins!');
+    console.log(p1Deck.length ? 'Player One Wins!' : 'Player Two Wins!');
     console.log('Battle Count:', battleCount);
     console.log('Player 1 Shuffle Count:', p1ShuffleCount);
     console.log('Player 2 Shuffle Count:', p2ShuffleCount);
 };
 
 const main = () => {
-    // console.log('playerOneDeck', playerOneDeck);
-    // console.log('playerTwoDeck', playerTwoDeck, '\n');
-
-    while (playerOneDeck.length && playerTwoDeck.length) {
-        while (playerOneDeck.length && playerTwoDeck.length) {
-            battle(playerOneDeck.shift(), playerTwoDeck.shift());
-        }
-        if (_.isEmpty(playerOneDeck)) {
-            playerOneDeck.push(..._.shuffle(playerOneDiscard));
-            playerOneDiscard.splice(0);
-            if (_.size(playerOneDeck)) {
-                ++p1ShuffleCount;
-            }
+    while (p1Deck.length && p2Deck.length) {
+        while (p1Deck.length && p2Deck.length) {
+            battle(p1Deck.shift(), p2Deck.shift());
         }
 
-        if (_.isEmpty(playerTwoDeck)) {
-            playerTwoDeck.push(..._.shuffle(playerTwoDiscard));
-            playerTwoDiscard.splice(0);
-            if (playerTwoDeck) {
-                ++p2ShuffleCount;
-            }
-        }
+        reShuffleDeck(p1Deck, p1Discard, 'p1');
+        reShuffleDeck(p2Deck, p2Discard, 'p2');
 
-        if (
-            playerOneDeck.length + playerOneDiscard.length + playerTwoDeck.length + playerTwoDiscard.length !==
-            playerDeckSize * 2
-        ) {
+        const cardCountChecksum = p1Deck.length + p1Discard.length + p2Deck.length + p2Discard.length;
+        if (cardCountChecksum !== playerCardCount * 2) {
             console.log('******bad game******');
             break;
         }
@@ -54,72 +40,32 @@ const main = () => {
     printResults();
 };
 
-const battle = (p1Card, p2Card) => {
-    const result = getWinner(p1Card, p2Card);
-    const spoils = [p1Card, p2Card];
+const battle = (p1Card, p2Card, tieBreakerSpoils = []) => {
+    const p1CardStrength = getCardStrength(p1Card);
+    const p2CardStrength = getCardStrength(p2Card);
 
-    switch (result) {
-        case 'p1':
-            // console.log('p1');
-            playerOneDiscard.push(...spoils);
-            break;
+    const spoils = _.compact([p1Card, p2Card, ...tieBreakerSpoils]);
 
-        case 'p2':
-            // console.log('p2');
-            playerTwoDiscard.push(...spoils);
-            break;
-
-        case 'tie':
-            // console.log('tie');
-            handleTieBreaker(spoils);
-            break;
+    if (p1CardStrength > p2CardStrength) {
+        p1Discard.push(...spoils);
+    } else if (p2CardStrength > p1CardStrength) {
+        p2Discard.push(...spoils);
+    } else {
+        handleTieBreaker(spoils);
     }
     ++battleCount;
 };
 
-const getWinner = (p1Card, p2Card) => {
-    const p1Power = getCardRank(p1Card);
-    const p2Power = getCardRank(p2Card);
-    if (p1Power > p2Power) {
-        return 'p1';
-    } else if (p2Power > p1Power) {
-        return 'p2';
-    } else {
-        return 'tie';
-    }
-};
-
 const handleTieBreaker = previousSpoils => {
-    const p1NextFour = getNextFourCards(playerOneDeck, playerOneDiscard);
-    const p2NextFour = getNextFourCards(playerTwoDeck, playerTwoDiscard);
+    const p1NextFourCards = getNextFourCards(p1Deck, p1Discard);
+    const p2NextFourCards = getNextFourCards(p2Deck, p2Discard);
 
-    const newP1Card = p1NextFour[p1NextFour.length - 1];
-    const newP2Card = p2NextFour[p2NextFour.length - 1];
+    const p1TieBreakerCard = getNextCard(p1NextFourCards);
+    const p2TieBreakerCard = getNextCard(p2NextFourCards);
 
-    const spoils = [...previousSpoils, ...p1NextFour, ...p2NextFour];
+    const spoils = [...previousSpoils, ...p1NextFourCards, ...p2NextFourCards];
 
-    if (!newP1Card) {
-        playerTwoDiscard.push(...spoils);
-    } else if (!newP2Card) {
-        playerOneDiscard.push(...spoils);
-    } else {
-        const result = getWinner(newP1Card, newP2Card);
-        switch (result) {
-            case 'p1':
-                playerOneDiscard.push(...spoils);
-                break;
-
-            case 'p2':
-                playerTwoDiscard.push(...spoils);
-                break;
-
-            case 'tie':
-                // console.log('double tie');
-                // console.log('spoils', spoils);
-                handleTieBreaker(spoils);
-                break;
-        }
-    }
+    battle(p1TieBreakerCard, p2TieBreakerCard, spoils);
 };
 
 const getNextFourCards = (deck, discard) => {
@@ -128,6 +74,24 @@ const getNextFourCards = (deck, discard) => {
         discard.splice(0);
     }
     return deck.splice(-4);
+};
+
+const getNextCard = deck => {
+    if (deck.length) {
+        return deck.pop();
+    }
+};
+
+const reShuffleDeck = (deck, discard, player) => {
+    if (_.isEmpty(deck) && !_.isEmpty(discard)) {
+        deck.push(..._.shuffle(discard));
+        discard.splice(0);
+        if (player === 'p1') {
+            ++p1ShuffleCount;
+        } else {
+            ++p2ShuffleCount;
+        }
+    }
 };
 
 main();
