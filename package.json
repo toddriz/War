@@ -4,7 +4,8 @@
     "description": "A simulation of the card game war",
     "main": "war.js",
     "scripts": {
-        "start": "node src/war.js"
+        "start": "node src/war.js",
+        "predict": "node src/predict.js"
     },
     "author": "Todd Risenmay",
     "license": "MIT",
