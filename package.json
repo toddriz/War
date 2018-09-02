@@ -1,0 +1,14 @@
+{
+    "name": "war",
+    "version": "1.0.0",
+    "description": "",
+    "main": "war.js",
+    "scripts": {
+        "start": "node src/war.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "lodash": "^4.17.10"
+    }
+}
