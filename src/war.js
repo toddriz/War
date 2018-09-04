@@ -4,16 +4,27 @@ const { getCardStrength, getDeckStrength } = require('./deck');
 // todd
 
 exports.simulateGame = ({ initialP1Deck, initialP2Deck }) => {
-    let p1ShuffleCount = 0;
-    let p2ShuffleCount = 0;
     let battleCount = 0;
-    let p1TieBreakWins = 0;
-    let p2TieBreakWins = 0;
-
-    const p1Deck = [...initialP1Deck];
-    const p2Deck = [...initialP2Deck];
-    const p1Discard = [];
-    const p2Discard = [];
+    let hasP1Shuffled;
+    let hasP2Shuffled;
+    const p1 = {
+        deck: [...initialP1Deck],
+        discard: [],
+        deckStrength: getDeckStrength(initialP1Deck),
+        shuffleCount: 0,
+        tieBreakWins: 0,
+        midGameDeckSize: 0,
+        midGameDeckStrength: 0
+    };
+    const p2 = {
+        deck: [...initialP2Deck],
+        discard: [],
+        deckStrength: getDeckStrength(initialP2Deck),
+        shuffleCount: 0,
+        tieBreakWins: 0,
+        midGameDeckSize: 0,
+        midGameDeckStrength: 0
+    };
 
     const getNextFourCards = (deck, discard) => {
         if (deck.length < 4) {
@@ -37,14 +48,14 @@ exports.simulateGame = ({ initialP1Deck, initialP2Deck }) => {
 
         if (p1CardStrength > p2CardStrength) {
             if (tieBreakerSpoils.length) {
-                p1TieBreakWins++;
+                p1.tieBreakWins++;
             }
-            p1Discard.push(...spoils);
+            p1.discard.push(...spoils);
         } else if (p2CardStrength > p1CardStrength) {
             if (tieBreakerSpoils.length) {
-                p2TieBreakWins++;
+                p2.tieBreakWins++;
             }
-            p2Discard.push(...spoils);
+            p2.discard.push(...spoils);
         } else {
             handleTieBreaker(spoils);
         }
@@ -52,8 +63,14 @@ exports.simulateGame = ({ initialP1Deck, initialP2Deck }) => {
     };
 
     const handleTieBreaker = previousSpoils => {
-        const p1NextFourCards = getNextFourCards(p1Deck, p1Discard);
-        const p2NextFourCards = getNextFourCards(p2Deck, p2Discard);
+        if (p1.deck.length < 4) {
+            p1.shuffleCount++;
+        }
+        const p1NextFourCards = getNextFourCards(p1.deck, p1.discard);
+        if (p2.deck.length < 4) {
+            p2.shuffleCount++;
+        }
+        const p2NextFourCards = getNextFourCards(p2.deck, p2.discard);
 
         const p1TieBreakerCard = getNextCard(p1NextFourCards);
         const p2TieBreakerCard = getNextCard(p2NextFourCards);
@@ -68,23 +85,33 @@ exports.simulateGame = ({ initialP1Deck, initialP2Deck }) => {
             deck.push(..._.shuffle(discard));
             discard.splice(0);
             if (player === 'p1') {
-                ++p1ShuffleCount;
+                if (!hasP1Shuffled) {
+                    p1.midGameDeckSize = deck.length;
+                    p1.midGameDeckStrength = getDeckStrength(deck);
+                }
+                hasP1Shuffled = true;
+                ++p1.shuffleCount;
             } else {
-                ++p2ShuffleCount;
+                if (!hasP2Shuffled) {
+                    p2.midGameDeckSize = deck.length;
+                    p2.midGameDeckStrength = getDeckStrength(deck);
+                }
+                hasP2Shuffled = true;
+                ++p2.shuffleCount;
             }
         }
     };
 
     const totalCards = initialP1Deck.length + initialP2Deck.length;
-    while (p1Deck.length && p2Deck.length) {
-        while (p1Deck.length && p2Deck.length) {
-            battle(p1Deck.shift(), p2Deck.shift());
+    while (p1.deck.length && p2.deck.length) {
+        while (p1.deck.length && p2.deck.length) {
+            battle(p1.deck.shift(), p2.deck.shift());
         }
 
-        reShuffleDeck(p1Deck, p1Discard, 'p1');
-        reShuffleDeck(p2Deck, p2Discard, 'p2');
+        reShuffleDeck(p1.deck, p1.discard, 'p1');
+        reShuffleDeck(p2.deck, p2.discard, 'p2');
 
-        const cardCountChecksum = p1Deck.length + p1Discard.length + p2Deck.length + p2Discard.length;
+        const cardCountChecksum = p1.deck.length + p1.discard.length + p2.deck.length + p2.discard.length;
         if (cardCountChecksum !== totalCards) {
             console.log('***********bad game***********');
             invalidGame = true;
@@ -93,13 +120,9 @@ exports.simulateGame = ({ initialP1Deck, initialP2Deck }) => {
     }
 
     return {
-        winner: p1Deck.length ? 'p1' : 'p2',
+        winner: p1.deck.length ? 'p1' : 'p2',
         battleCount,
-        p1TieBreakWins,
-        p2TieBreakWins,
-        p1DeckStrength: getDeckStrength(initialP1Deck),
-        p2DeckStrength: getDeckStrength(initialP2Deck),
-        p1ShuffleCount,
-        p2ShuffleCount
+        p1: _.omit(p1,['deck', 'discard']),
+        p2: _.omit(p2, ['deck', 'discard'])
     };
 };

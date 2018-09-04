@@ -26,20 +26,19 @@ const printGameResult = (
     }
 };
 
-const gamesToRun = 100;
+const gamesToRun = 10000;
 const numberOfDecks = 2;
 const cardsPerPlayer = 52;
 
-const runGame = index => {
+const runGame = (index, printResults) => {
     const [initialP1Deck, initialP2Deck] = dealCards(numberOfDecks, cardsPerPlayer);
 
     const result = simulateGame({ initialP1Deck, initialP2Deck, cardsPerPlayer });
 
     results.push(result);
 
-    printGameResult(result, false, index + 1);
+    printResults && printGameResult(result, false, index + 1);
 };
 
 _.times(gamesToRun, runGame);
-
 fs.writeFileSync('results.json', JSON.stringify(results));

@@ -13,7 +13,7 @@ const getStandardDeck = () => {
     );
 };
 
-exports.dealCards = (numberOfDecks, cardsPerPlayer) => {
+const dealCards = (numberOfDecks, cardsPerPlayer) => {
     const allCards = _.shuffle(_.flatten(_.times(numberOfDecks, getStandardDeck)));
 
     return _.chunk(allCards, cardsPerPlayer);
@@ -29,12 +29,14 @@ const getCardStrength = card => {
     }
 };
 
-exports.getCardStrength = getCardStrength;
-
 const getDeckStrength = deck => {
     return deck.reduce((acc, card) => {
         return acc + getCardStrength(card);
     }, 0);
 };
 
-exports.getDeckStrength = getDeckStrength;
+module.exports = {
+    dealCards,
+    getCardStrength,
+    getDeckStrength
+};
