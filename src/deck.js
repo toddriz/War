@@ -33,7 +33,7 @@ exports.getCardStrength = getCardStrength;
 
 const getDeckStrength = deck => {
     return deck.reduce((acc, card) => {
-        return (acc += getCardStrength(card));
+        return acc + getCardStrength(card);
     }, 0);
 };
 
